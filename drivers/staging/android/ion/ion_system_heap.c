@@ -40,6 +40,8 @@ static gfp_t low_order_gfp_flags  = GFP_HIGHUSER | __GFP_ZERO;
 bool pool_auto_refill_en  __read_mostly =
 		IS_ENABLED(CONFIG_ION_POOL_AUTO_REFILL);
 
+static struct kmem_cache *ion_page_info_pool;
+
 int order_to_index(unsigned int order)
 {
 	int i;
@@ -333,7 +335,6 @@ static int ion_system_heap_allocate(struct ion_heap *heap,
 
 		if (ret) {
 			free_info(info, info_onstack, ARRAY_SIZE(info_onstack));
-			ret = PTR_ERR(info);
 			goto err;
 		}
 
@@ -641,7 +642,7 @@ struct ion_heap *ion_system_heap_create(struct ion_platform_heap *data)
 
 	heap = kzalloc(sizeof(*heap), GFP_KERNEL);
 	if (!heap)
-		goto err_free_page_info_pool;
+		goto destroy_page_info_pool;
 
 	heap->heap.ops = &system_heap_ops;
 	heap->heap.type = ION_HEAP_TYPE_SYSTEM;
@@ -689,9 +690,9 @@ destroy_secure_pools:
 			ion_system_heap_destroy_pools(heap->secure_pools[i]);
 	}
 	kfree(heap);
-err_free_page_info_pool:
+destroy_page_info_pool:
 	kmem_cache_destroy(ion_page_info_pool);
-	return ERR_PTR(ret);
+	return ERR_PTR(-ENOMEM);
 }
 
 static int ion_system_contig_heap_allocate(struct ion_heap *heap,
