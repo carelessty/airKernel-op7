@@ -1,64 +1,80 @@
 # AnyKernel3 Ramdisk Mod Script
 # osm0sis @ xda-developers
 
+# Set up working directory variables
+test "$home" || home=$PWD;
+split_img=$home/split_img;
+
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=ExampleKernel by osm0sis @ xda-developers
+kernel.string=IceKernel @ xda-developers
 do.devicecheck=1
 do.modules=0
 do.systemless=1
 do.cleanup=1
 do.cleanuponabort=0
-device.name1=maguro
-device.name2=toro
-device.name3=toroplus
-device.name4=tuna
-device.name5=
-supported.versions=
-supported.patchlevels=
+device.name1=OnePlus7
+device.name2=guacamoleb
+device.name3=OnePlus7Pro
+device.name4=guacamole
+device.name5=OnePlus7ProTMO
+device.name6=guacamolet
+device.name7=OnePlus7T
+device.name8=hotdogb
+device.name9=OnePlus7TPro
+device.name10=hotdog
+device.name11=OnePlus7TProNR
+device.name12=hotdogg
+supported.versions=10
 '; } # end properties
 
 # shell variables
-block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;
-is_slot_device=0;
-ramdisk_compression=auto;
-
+block=/dev/block/bootdevice/by-name/boot
+is_slot_device=1
+ramdisk_compression=auto
 
 ## AnyKernel methods (DO NOT CHANGE)
 # import patching functions/variables - see for reference
 . tools/ak3-core.sh;
-
 
 ## AnyKernel file attributes
 # set permissions/ownership for included ramdisk files
 set_perm_recursive 0 0 755 644 $ramdisk/*;
 set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
 
+## Select the correct image to flash
+hotdog="$(grep -wom 1 hotdog*.* /system/build.prop | sed 's/.....$//')";
+guacamole="$(grep -wom 1 guacamole*.* /system/build.prop | sed 's/.....$//')";
+userflavor="$(file_getprop /system/build.prop "ro.build.user"):$(file_getprop /system/build.prop "ro.build.flavor")";
+userflavor2="$(file_getprop2 /system/build.prop "ro.build.user"):$(file_getprop2 /system/build.prop "ro.build.flavor")";
+if [ "$userflavor" == "jenkins:$hotdog-user" ] || [ "$userflavor2" == "jenkins:$guacamole-user" ]; then
+  os="stock";
+else
+  os="custom";
+fi;
+
+if [ ! -f $home/source/Image.gz ] || [ ! -f $home/source/dtb ]; then
+    ui_print " " "This zip is corrupted! Aborting..."; exit 1;
+fi
+
+if [ $os == "stock" ]; then
+    mv $home/source/Image.gz $home/Image.gz;
+else
+    mv $home/source/Image.gz $home/Image.gz-dtb;
+    cat $home/source/dtb >> $home/Image.gz-dtb;
+fi
 
 ## AnyKernel install
 dump_boot;
 
-# begin ramdisk changes
+if [ $os == "stock" ]; then
+    mv $home/source/dtb $home/split_img/;
+fi
 
-# init.rc
-backup_file init.rc;
-replace_string init.rc "cpuctl cpu,timer_slack" "mount cgroup none /dev/cpuctl cpu" "mount cgroup none /dev/cpuctl cpu,timer_slack";
-
-# init.tuna.rc
-backup_file init.tuna.rc;
-insert_line init.tuna.rc "nodiratime barrier=0" after "mount_all /fstab.tuna" "\tmount ext4 /dev/block/platform/omap/omap_hsmmc.0/by-name/userdata /data remount nosuid nodev noatime nodiratime barrier=0";
-append_file init.tuna.rc "bootscript" init.tuna;
-
-# fstab.tuna
-backup_file fstab.tuna;
-patch_fstab fstab.tuna /system ext4 options "noatime,barrier=1" "noatime,nodiratime,barrier=0";
-patch_fstab fstab.tuna /cache ext4 options "barrier=1" "barrier=0,nomblk_io_submit";
-patch_fstab fstab.tuna /data ext4 options "data=ordered" "nomblk_io_submit,data=writeback";
-append_file fstab.tuna "usbdisk" fstab;
-
-# end ramdisk changes
+# Clean up existing ramdisk overlays
+rm -rf $ramdisk/overlay;
+rm -rf $ramdisk/overlay.d;
 
 write_boot;
 ## end install
-
