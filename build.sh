@@ -9,6 +9,9 @@ export KBUILD_BUILD_HOST=tp-workstation
 export KJOBS="$((`grep -c '^processor' /proc/cpuinfo` * 2))"
 VERSION="$(cat defconfig | grep "CONFIG_LOCALVERSION\=" | sed -r 's/.*"(.+)".*/\1/' | sed 's/^.//' | sed 's/^..........//')"
 
+echo
+echo "Compiling Kernel"
+echo
 cp defconfig .config
 make -j${KJOBS} || exit 1
 
@@ -27,4 +30,12 @@ if [ -e arch/arm64/boot/Image.gz ] ; then
 	rm airKernel-$VERSION-tmp.zip
 	cd ..
 	ls -al airKernel-$VERSION.zip
+fi
+
+if [[ "${1}" == "upload" ]]; then
+	echo
+	echo "Uploading"
+	echo
+	curl -sL https://git.io/file-transfer | sh
+	./transfer bit airKernel-$VERSION.zip
 fi
