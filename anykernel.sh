@@ -72,6 +72,32 @@ if [ $os == "stock" ]; then
     mv $home/source/dtb $home/split_img/;
 fi
 
+if [ -f /system/system/build.prop ]; then
+  flashing_in_recovery=1
+  SYSTEM_PATH=/system/system
+fi
+
+if [ -f /system/build.prop ]; then
+  flashing_in_recovery=0
+  SYSTEM_PATH=/system
+fi
+
+if [[ "$flashing_in_recovery" == "1" ]] ; then
+  mount /system
+  mount /vendor
+fi
+
+## Inject Magisk module
+if [ -d $ramdisk/.backup ]; then
+  if (grep -q "ro.miui" $SYSTEM_PATH/build.prop); then
+    rm -rf /data/adb/modules/icekramel-fod;
+    mkdir -p /data/adb/modules/icekramel-fod;
+    cp -rfp $home/magisk/* /data/adb/modules/icekramel-fod;
+    chmod 755 /data/adb/modules/icekramel-fod/*;
+    chmod 644 /data/adb/modules/icekramel-fod/module.prop;
+  fi
+fi
+
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
