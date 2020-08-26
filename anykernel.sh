@@ -72,19 +72,11 @@ if [ $os == "stock" ]; then
     mv $home/source/dtb $home/split_img/;
 fi
 
+SYSTEM_PATH=/system
+
 if [ -f /system/system/build.prop ]; then
-  flashing_in_recovery=1
   SYSTEM_PATH=/system/system
-fi
-
-if [ -f /system/build.prop ]; then
-  flashing_in_recovery=0
-  SYSTEM_PATH=/system
-fi
-
-if [[ "$flashing_in_recovery" == "1" ]] ; then
   mount /system
-  mount /vendor
 fi
 
 ## Inject Magisk module
