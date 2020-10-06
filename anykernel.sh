@@ -86,6 +86,16 @@ else
     patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=0"
 fi
 
+case "$ZIPFILE" in
+  *BATTERY*)
+    ui_print " " "BATTERY string detected! Patching cmdline..."
+    patch_cmdline "icekramel_helper.is_custombatt" "icekramel_helper.is_custombatt=1"
+    ;;
+  *)
+    patch_cmdline "icekramel_helper.is_custombatt" "icekramel_helper.is_custombatt=0"
+    ;;
+esac
+
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
