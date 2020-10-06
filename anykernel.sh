@@ -79,6 +79,13 @@ if [ -f /system/system/build.prop ]; then
   mount /system
 fi
 
+if (grep -q "ro.miui" $SYSTEM_PATH/build.prop); then
+    ui_print " " "Xiaomeme-UI detected! Applying FOD fix..."
+    patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=1"
+else
+    patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=0"
+fi
+
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
