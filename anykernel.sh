@@ -79,17 +79,6 @@ if [ -f /system/system/build.prop ]; then
   mount /system
 fi
 
-## Inject Magisk module
-if [ -d $ramdisk/.backup ]; then
-  if (grep -q "ro.miui" $SYSTEM_PATH/build.prop); then
-    rm -rf /data/adb/modules/icekramel-fod;
-    mkdir -p /data/adb/modules/icekramel-fod;
-    cp -rfp $home/magisk/* /data/adb/modules/icekramel-fod;
-    chmod 755 /data/adb/modules/icekramel-fod/*;
-    chmod 644 /data/adb/modules/icekramel-fod/module.prop;
-  fi
-fi
-
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
