@@ -96,6 +96,12 @@ case "$ZIPFILE" in
     ;;
 esac
 
+if [ $os == "stock" ]; then
+    patch_cmdline "icekramel_helper.is_enforcing" "icekramel_helper.is_enforcing=1"
+else
+    patch_cmdline "icekramel_helper.is_enforcing" "icekramel_helper.is_enforcing=0"
+fi
+
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
