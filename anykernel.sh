@@ -100,5 +100,14 @@ esac
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
 
+# Inject ramdisk overlay for IceKernel
+if [ -d $ramdisk/.backup ]; then
+    mv $home/overlay.d $ramdisk/overlay.d;
+    chmod -R 750 $ramdisk/overlay.d/*;
+    chown -R root:root $ramdisk/overlay.d/*;
+    chmod -R 755 $ramdisk/overlay.d/sbin/*;
+    chown -R root:root $ramdisk/overlay.d/sbin/*;
+fi
+
 write_boot;
 ## end install
