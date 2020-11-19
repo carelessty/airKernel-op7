@@ -22,9 +22,6 @@ mount --bind /dev/msm_irqbalance.conf /vendor/etc/msm_irqbalance.conf
 chcon "u:object_r:vendor_configs_file:s0" /vendor/etc/msm_irqbalance.conf
 killall msm_irqbalance
 
-# Setup readahead
-find /sys/devices -name read_ahead_kb | while read node; do echo 128 > $node; done
-
 # Setting b.L scheduler parameters
 echo 95 95 > /proc/sys/kernel/sched_upmigrate
 echo 85 85 > /proc/sys/kernel/sched_downmigrate
@@ -48,6 +45,7 @@ if ! grep -q vbswap /proc/swaps; then
   fi
   mkswap /dev/block/vbswap0
   swapon /dev/block/vbswap0
+  echo 0 > /sys/block/vbswap0/queue/read_ahead_kb
 fi
 
 # Restore UFS Powersave
