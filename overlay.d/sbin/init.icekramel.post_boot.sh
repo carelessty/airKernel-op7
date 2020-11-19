@@ -65,3 +65,8 @@ echo 10 > /proc/sys/vm/dirty_background_ratio
 echo 3000 > /proc/sys/vm/dirty_expire_centisecs
 echo 0 > /proc/sys/vm/page-cluster
 
+# net tweaks
+echo 262144 > /proc/sys/net/core/rmem_max
+echo 262144 > /proc/sys/net/core/wmem_max
+
+echo 0 > /sys/module/dm_verity/parameters/prefetch_cluster
