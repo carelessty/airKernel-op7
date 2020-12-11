@@ -17,10 +17,8 @@ if [ -e arch/arm64/boot/Image.gz ] ; then
 	echo "Building Kernel Package"
 	echo
 	mkdir kernelzip
-	mkdir kernelzip/source
 	cp -rp ./anykernel/* kernelzip/
-	cp arch/arm64/boot/Image.gz kernelzip/source/
-	find arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > kernelzip/source/dtb
+	cp arch/arm64/boot/Image.gz-dtb kernelzip/
 	cd kernelzip
 	7z a -mx9 $VERSION-tmp.zip *
 	zipalign -v 4 $VERSION-tmp.zip ../$VERSION.zip
