@@ -1,10 +1,6 @@
 # AnyKernel3 Ramdisk Mod Script
 # osm0sis @ xda-developers
 
-# Set up working directory variables
-test "$home" || home=$PWD;
-split_img=$home/split_img;
-
 ## AnyKernel setup
 # begin properties
 properties() { '
@@ -43,34 +39,8 @@ ramdisk_compression=auto
 set_perm_recursive 0 0 755 644 $ramdisk/*;
 set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
 
-## Select the correct image to flash
-hotdog="$(grep -wom 1 hotdog*.* /system/build.prop | sed 's/.....$//')";
-guacamole="$(grep -wom 1 guacamole*.* /system/build.prop | sed 's/.....$//')";
-userflavor="$(file_getprop /system/build.prop "ro.build.user"):$(file_getprop /system/build.prop "ro.build.flavor")";
-userflavor2="$(file_getprop2 /system/build.prop "ro.build.user"):$(file_getprop2 /system/build.prop "ro.build.flavor")";
-if [ "$userflavor" == "jenkins:$hotdog-user" ] || [ "$userflavor2" == "jenkins:$guacamole-user" ]; then
-  os="stock";
-else
-  os="custom";
-fi;
-
-if [ ! -f $home/source/Image.gz ] || [ ! -f $home/source/dtb ]; then
-    ui_print " " "This zip is corrupted! Aborting..."; exit 1;
-fi
-
-if [ $os == "stock" ]; then
-    mv $home/source/Image.gz $home/Image.gz;
-else
-    mv $home/source/Image.gz $home/Image.gz-dtb;
-    cat $home/source/dtb >> $home/Image.gz-dtb;
-fi
-
 ## AnyKernel install
 dump_boot;
-
-if [ $os == "stock" ]; then
-    mv $home/source/dtb $home/split_img/;
-fi
 
 SYSTEM_PATH=/system
 
@@ -79,12 +49,12 @@ if [ -f /system/system/build.prop ]; then
   mount /system
 fi
 
-if (grep -q "ro.miui" $SYSTEM_PATH/build.prop); then
-    ui_print " " "Xiaomeme-UI detected! Applying FOD fix..."
-    patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=1"
-else
-    patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=0"
+if (! grep -q "ro.flyme" $SYSTEM_PATH/build.prop); then
+    ui_print " " "Unsupported system. Aborting...";
+    exit 1;
 fi
+
+patch_cmdline "icekramel_helper.is_fod" "icekramel_helper.is_fod=1"
 
 case "$ZIPFILE" in
   *BATTERY*)
@@ -99,15 +69,6 @@ esac
 # Clean up existing ramdisk overlays
 rm -rf $ramdisk/overlay;
 rm -rf $ramdisk/overlay.d;
-
-# Inject ramdisk overlay for IceKernel
-if [ -d $ramdisk/.backup ]; then
-    mv $home/overlay.d $ramdisk/overlay.d;
-    chmod -R 750 $ramdisk/overlay.d/*;
-    chown -R root:root $ramdisk/overlay.d/*;
-    chmod -R 755 $ramdisk/overlay.d/sbin/*;
-    chown -R root:root $ramdisk/overlay.d/sbin/*;
-fi
 
 write_boot;
 ## end install
