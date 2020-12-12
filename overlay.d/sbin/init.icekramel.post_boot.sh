@@ -1,18 +1,5 @@
 #! /vendor/bin/sh
 
-# Workaround vdc slowing down boot
-( for i in $(seq 1 20); do
-    PID=$(pgrep -f "vdc checkpoint restoreCheckpoint")
-    if [ ! -z $PID ]; then
-      echo "Killing checkpoint vdc process $PID"
-      kill -9 $PID
-      exit
-    fi
-    sleep 1
-  done
-  echo "Timed out while looking for checkpoint vdc process"
-) &
-
 # Replace msm_irqbalance.conf
 echo "PRIO=1,1,1,1,0,0,0,0
 #arch_timer, arm-pmu, arch_mem_timer, msm_drm, glink_lpass, kgsl
@@ -21,10 +8,6 @@ chmod 644 /dev/msm_irqbalance.conf
 mount --bind /dev/msm_irqbalance.conf /vendor/etc/msm_irqbalance.conf
 chcon "u:object_r:vendor_configs_file:s0" /vendor/etc/msm_irqbalance.conf
 killall msm_irqbalance
-
-# Setting b.L scheduler parameters
-echo 95 95 > /proc/sys/kernel/sched_upmigrate
-echo 85 85 > /proc/sys/kernel/sched_downmigrate
 
 # Setup vbswap
 while [ ! -e /dev/block/vbswap0 ]; do
@@ -47,12 +30,6 @@ if ! grep -q vbswap /proc/swaps; then
   swapon /dev/block/vbswap0
   echo 0 > /sys/block/vbswap0/queue/read_ahead_kb
 fi
-
-# Restore UFS Powersave
-echo 1 > /sys/devices/platform/soc/1d84000.ufshc/clkgate_enable
-echo 1 > /sys/devices/platform/soc/1d84000.ufshc/hibern8_on_idle_enable
-# Restore lpm_level
-echo N > /sys/module/lpm_levels/parameters/sleep_disabled
 
 # blkio tweaks
 echo 2000 > /dev/blkio/blkio.group_idle
